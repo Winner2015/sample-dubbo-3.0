@@ -59,31 +59,32 @@ public interface DubboBeanUtils {
      */
     static void registerCommonBeans(BeanDefinitionRegistry registry) {
 
+        //ReferenceAnnotationBeanPostProcessor扫描到被@DubboService注解的接口会放进ServicePackagesHolder，以便后续作为容器类使用
         registerInfrastructureBean(registry, ServicePackagesHolder.BEAN_NAME, ServicePackagesHolder.class);
 
+        //Dubbo消费者中，被<dubbo:reference ...>配置的接口，会被放入ReferenceBeanManager，以便后续作为容器类使用
         registerInfrastructureBean(registry, ReferenceBeanManager.BEAN_NAME, ReferenceBeanManager.class);
 
-        // Since 2.5.7 Register @Reference Annotation Bean Processor as an infrastructure Bean
+        //注册后置处理器，扫描出@DubboService类，并注入到被依赖的其他Bean当中
         registerInfrastructureBean(registry, ReferenceAnnotationBeanPostProcessor.BEAN_NAME,
                 ReferenceAnnotationBeanPostProcessor.class);
 
-        // TODO Whether DubboConfigAliasPostProcessor can be removed ?
-        // Since 2.7.4 [Feature] https://github.com/apache/dubbo/issues/5093
+        // 注册后置处理器，为Dubbo配置类注册别名
         registerInfrastructureBean(registry, DubboConfigAliasPostProcessor.BEAN_NAME,
                 DubboConfigAliasPostProcessor.class);
 
-        // Since 2.7.4 Register DubboBootstrapApplicationListener as an infrastructure Bean
+        // 监听Spring容器的启动与关闭，触发Dubbo的初始化与销毁
         registerInfrastructureBean(registry, DubboBootstrapApplicationListener.BEAN_NAME,
                 DubboBootstrapApplicationListener.class);
 
-        // Since 2.7.6 Register DubboConfigDefaultPropertyValueBeanPostProcessor as an infrastructure Bean
+        // 注册后置处理器，为Dubbo的配置类注入默认值（比如ID）
         registerInfrastructureBean(registry, DubboConfigDefaultPropertyValueBeanPostProcessor.BEAN_NAME,
                 DubboConfigDefaultPropertyValueBeanPostProcessor.class);
 
-        // Dubbo config initializer
+        // 用于初始化Dubbo的配置类，比如ApplicationConfig、ProviderConfig、ConsumerConfig等
         registerInfrastructureBean(registry, DubboConfigBeanInitializer.BEAN_NAME, DubboConfigBeanInitializer.class);
 
-        // register infra bean if not exists later
+        // 注册一些其他Dubbo依赖的基础bean
         registerInfrastructureBean(registry, DubboInfraBeanRegisterPostProcessor.BEAN_NAME, DubboInfraBeanRegisterPostProcessor.class);
     }
 
@@ -121,7 +122,6 @@ public interface DubboBeanUtils {
      * Call this method in BeanDefinitionRegistryPostProcessor,
      * in order to enable the registered BeanFactoryPostProcessor bean to be loaded and executed.
      * @see DubboInfraBeanRegisterPostProcessor
-     * @see org.springframework.context.support.PostProcessorRegistrationDelegate#invokeBeanFactoryPostProcessors(org.springframework.beans.factory.config.ConfigurableListableBeanFactory, java.util.List)
      * @param beanFactory
      * @param registry
      */

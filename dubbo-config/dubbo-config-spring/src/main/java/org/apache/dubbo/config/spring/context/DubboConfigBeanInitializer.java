@@ -82,6 +82,9 @@ public class DubboConfigBeanInitializer implements BeanFactoryAware, Initializin
 
     /**
      * Initializes there Dubbo's Config Beans before @Reference bean autowiring
+     *
+     * 在被@Reference注解的bean加载前确保一些Dubbo的配置Bean被初始化，并添加到 configManager
+     * 中，包括ApplicationConfig，RegistryConfig，ProviderConfig和ConsumerConfig类等。
      */
     private void prepareDubboConfigBeans() {
         //Make sure all these config beans are inited and registered to ConfigManager

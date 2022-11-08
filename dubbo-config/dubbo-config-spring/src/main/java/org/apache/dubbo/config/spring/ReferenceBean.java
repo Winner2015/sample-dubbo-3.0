@@ -97,6 +97,16 @@ import java.util.Map;
 public class ReferenceBean<T> implements FactoryBean,
         ApplicationContextAware, BeanClassLoaderAware, BeanNameAware, InitializingBean, DisposableBean {
 
+    /**
+     *  ReferenceBean继承自Spring的FactoryBean，而FactoryBean常用于实例化那些配置复杂、或者无法通过反射生成实例的类，
+     *  进而完成Spring Bean的注册，与`@Configration`和`@Bean`的功能类似。
+     *
+     *  ReferenceBean代表的是对Dubbo远程服务的引用，每个XML配置<dubbo:reference id="helloService ...">，或者等效的@DubboReference注解，
+     *  都会生成一个ReferenceBean，将远程服务当做本地服务那样，注册到Spring当中
+     *
+    */
+
+
     private transient ApplicationContext applicationContext;
 
     private ClassLoader beanClassLoader;
@@ -180,6 +190,15 @@ public class ReferenceBean<T> implements FactoryBean,
      * @see DubboConfigBeanInitializer
      * @see org.apache.dubbo.config.bootstrap.DubboBootstrap
      */
+
+    /**
+     * 当Spring通过类型搜索Bean时，如果Spring无法确定一个 factory bean 的类型时，它可能会尝试对其进行初始化。而 ReferenceBean 也是一个
+     * FactoryBean。（但是该问题在Dubo中已经通过装饰BeanDefinition解决了）另外，如果一些 ReferenceBeans 依赖很早初始化的bean， 而 dubbo config benas
+     * 还没有准备好，如果马上初始化 dubbo reference，可能会出现一些意想不到的问题。所以，在Dubbo3.0中，referencebean 初始化时，只会创建一个 lazy proxy，与dubbo
+     * 引用相关的资源不会被初始化。这样就排除了Spring的影响，dubbo配置初始化是可控的了。
+     *
+     * 当Spring启动过程中，发现该Bean被其他Bean依赖，则会通过getObject方法中进行懒加载，创建一个lazy Proxy，真正的初始化当首次调用代理时才会触发
+    */
     @Override
     public Object getObject() {
         if (lazyProxy == null) {
@@ -201,6 +220,13 @@ public class ReferenceBean<T> implements FactoryBean,
 
     @Override
     public void afterPropertiesSet() throws Exception {
+
+        /**
+         * 可以发现，Dubbo并不会在该方法中进行初始化，只是对 BeanDefinition 解析了 interfaceClass 和 interfaceName 等属性值，
+         * 然后将Bean收集到 ReferenceBeanManager中。
+         *
+        */
+
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 
         // pre init xml reference bean or @DubboReference annotation
@@ -316,6 +342,8 @@ public class ReferenceBean<T> implements FactoryBean,
 
         //set proxy interfaces
         //see also: org.apache.dubbo.rpc.proxy.AbstractProxyFactory.getProxy(org.apache.dubbo.rpc.Invoker<T>, boolean)
+
+        //基于Spring的工具类，生成懒加载的代理
         ProxyFactory proxyFactory = new ProxyFactory();
         proxyFactory.setTargetSource(new DubboReferenceLazyInitTargetSource());
         proxyFactory.addInterface(interfaceClass);
@@ -340,12 +368,16 @@ public class ReferenceBean<T> implements FactoryBean,
         if (referenceConfig == null) {
             throw new IllegalStateException("ReferenceBean is not ready yet, please make sure to call reference interface method after dubbo is started.");
         }
-        //get reference proxy
+
+        //通过ReferenceConfig触发真正的初始化，ReferenceConfig由ReferenceBeanManager管理并赋值
         return referenceConfig.get();
     }
 
     private class DubboReferenceLazyInitTargetSource extends AbstractLazyCreationTargetSource {
 
+        //抽象类要求子类调用这个方法来返回延迟初始化的对象，第一次调用代理时调用该方法。
+        //当需要将某个依赖项的引用传递给对象，但不希望在首次使用该依赖项之前创建该依赖项时，这很有用。
+        // 一个典型的场景是连接到远程资源。这正好解决上述Dubbo3.0中的诉求。
         @Override
         protected Object createObject() throws Exception {
             return getCallProxy();

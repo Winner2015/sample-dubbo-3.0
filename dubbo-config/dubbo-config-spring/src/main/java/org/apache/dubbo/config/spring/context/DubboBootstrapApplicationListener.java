@@ -105,8 +105,10 @@ public class DubboBootstrapApplicationListener implements ApplicationListener, A
             DubboBootstrapStartStopListenerSpringAdapter.applicationContext = event.getApplicationContext();
         }
         if (event instanceof ContextRefreshedEvent) {
+            //Spring容器启动，触发Dubbo启动
             onContextRefreshedEvent((ContextRefreshedEvent) event);
         } else if (event instanceof ContextClosedEvent) {
+            //Spring容器关闭，触发Dubbo销毁前的钩子方法
             onContextClosedEvent((ContextClosedEvent) event);
         }
     }

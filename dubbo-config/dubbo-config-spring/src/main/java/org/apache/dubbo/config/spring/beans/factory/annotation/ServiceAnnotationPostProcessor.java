@@ -90,6 +90,7 @@ import static org.springframework.util.ClassUtils.resolveClassName;
  * A {@link BeanFactoryPostProcessor} used for processing of {@link Service @Service} annotated classes and annotated bean in java config classes.
  * It's also the infrastructure class of XML {@link BeanDefinitionParser} on &lt;dubbbo:annotation /&gt;
  *
+ * 扫描被@DubboService注解的类，注册为Spring的BeanDefinition
  *
  * @see AnnotationBeanDefinitionParser
  * @see BeanDefinitionRegistryPostProcessor
@@ -161,15 +162,20 @@ public class ServiceAnnotationPostProcessor implements BeanDefinitionRegistryPos
      */
     private void scanServiceBeans(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
 
+        //使用继承自Spring体系的扫描器
         DubboClassPathBeanDefinitionScanner scanner =
                 new DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
 
+        //bean的名称生成器
         BeanNameGenerator beanNameGenerator = resolveBeanNameGenerator(registry);
         scanner.setBeanNameGenerator(beanNameGenerator);
+
+        //需要扫描的注解类型
         for (Class<? extends Annotation> annotationType : serviceAnnotationTypes) {
             scanner.addIncludeFilter(new AnnotationTypeFilter(annotationType));
         }
 
+        //需要排除的类型
         ScanExcludeFilter scanExcludeFilter = new ScanExcludeFilter();
         scanner.addExcludeFilter(scanExcludeFilter);
 
@@ -183,7 +189,7 @@ public class ServiceAnnotationPostProcessor implements BeanDefinitionRegistryPos
                 continue;
             }
 
-            // Registers @Service Bean first
+            //执行扫描，将Dubbo的相关类，注册到Spring
             scanner.scan(packageToScan);
 
             // Finds all BeanDefinitionHolders of @Service whether @ComponentScan scans or not.
@@ -300,7 +306,7 @@ public class ServiceAnnotationPostProcessor implements BeanDefinitionRegistryPos
 
         Annotation service = findServiceAnnotation(beanClass);
 
-        // The attributes of @Service annotation
+        // 获取注解的属性，例如Dubbo服务者的接口等
         Map<String, Object> serviceAnnotationAttributes = AnnotationUtils.getAttributes(service, true);
 
         String serviceInterface = resolveInterfaceName(serviceAnnotationAttributes, beanClass);

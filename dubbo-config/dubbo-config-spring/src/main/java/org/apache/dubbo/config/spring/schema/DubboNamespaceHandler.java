@@ -54,6 +54,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
 
     @Override
     public void init() {
+        //注册Dubbo标签的解析器，负责解析XML中不同的节点，如<dubbo:application/>、<dubbo:module/>等
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class));
         registerBeanDefinitionParser("module", new DubboBeanDefinitionParser(ModuleConfig.class));
         registerBeanDefinitionParser("registry", new DubboBeanDefinitionParser(RegistryConfig.class));
@@ -70,35 +71,27 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser());
     }
 
-    /**
-     * Override {@link NamespaceHandlerSupport#parse(Element, ParserContext)} method
-     *
-     * @param element       {@link Element}
-     * @param parserContext {@link ParserContext}
-     * @return
-     * @since 2.7.5
-     */
+
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
+
+        // 拿到Spring的BeanDefinition注册入口，一般就是DefaultListableBeanFactory实例
         BeanDefinitionRegistry registry = parserContext.getRegistry();
+
+        // 注册与Spring注解相关的各种后置处理器，用于支持@Autowired、@Resource等特性，
+        // Dubbo只是转掉了Spring的方法，将处理器的注册提前了点而已，并没有做其他改变
         registerAnnotationConfigProcessors(registry);
-        /**
-         * @since 2.7.8
-         * issue : https://github.com/apache/dubbo/issues/6275
-         */
+
+        // 注册Dubbo依赖的基础bean
         registerCommonBeans(registry);
+
+        // 将XML元素解析为BeanDefinition，依赖于init方法中初始化的各种DubboBeanDefinitionParser
         BeanDefinition beanDefinition = super.parse(element, parserContext);
         setSource(beanDefinition);
+
         return beanDefinition;
     }
 
-    /**
-     * Register the processors for the Spring Annotation-Driven features
-     *
-     * @param registry {@link BeanDefinitionRegistry}
-     * @see AnnotationConfigUtils
-     * @since 2.7.5
-     */
     private void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
     }

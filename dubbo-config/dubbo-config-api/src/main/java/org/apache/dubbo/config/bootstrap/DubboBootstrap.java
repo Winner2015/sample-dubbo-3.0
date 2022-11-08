@@ -549,6 +549,7 @@ public class DubboBootstrap {
             return;
         }
 
+        //SPI机制，加载扩展点FrameworkExt的三个子类：ConfigManager、Environment、ServiceRepository
         ApplicationModel.initFrameworkExts();
 
         startConfigCenter();

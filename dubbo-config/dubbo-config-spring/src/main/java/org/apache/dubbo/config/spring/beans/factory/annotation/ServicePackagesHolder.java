@@ -21,6 +21,8 @@ import java.util.Set;
 
 /**
  * A temp holder for scanned packages of service.
+ * ServiceAnnotationPostProcessor扫描到的被@DubboService注解的类，放到该容器中
+ *
  */
 public class ServicePackagesHolder {
 

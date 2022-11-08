@@ -77,6 +77,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
     private static final String METHOD = "Method";
     private static final String BEAN_NAME = "BEAN_NAME";
     private final Class<?> beanClass;
+
+    //配置项className ——》 （属性名——》属性对应的类型）
     private static Map<String, Map<String, Class>> beanPropsCache = new HashMap<>();
 
     public DubboBeanDefinitionParser(Class<?> beanClass) {
@@ -111,20 +113,12 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                 beanName = prefix + "#" + (counter++);
             }
         }
+        //给配置项设置一个唯一的名称
         beanDefinition.setAttribute(BEAN_NAME, beanName);
 
-        if (ProtocolConfig.class.equals(beanClass)) {
-//            for (String name : parserContext.getRegistry().getBeanDefinitionNames()) {
-//                BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(name);
-//                PropertyValue property = definition.getPropertyValues().getPropertyValue("protocol");
-//                if (property != null) {
-//                    Object value = property.getValue();
-//                    if (value instanceof ProtocolConfig && beanName.equals(((ProtocolConfig) value).getName())) {
-//                        definition.getPropertyValues().addPropertyValue("protocol", new RuntimeBeanReference(beanName));
-//                    }
-//                }
-//            }
-        } else if (ServiceBean.class.equals(beanClass)) {
+        if (ServiceBean.class.equals(beanClass)) {
+            //如果服务提供者是通过"class"属性来指定实现类的：<dubbo:service class="xxx.DemoServiceImpl"/>
+            //将其转换成<dubbo:service ref="beanId"/> 的等价形式
             String className = resolveAttribute(element, "class", parserContext);
             if (StringUtils.isNotEmpty(className)) {
                 RootBeanDefinition classDefinition = new RootBeanDefinition();
@@ -135,7 +129,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             }
         }
 
-
+        //这里缓存了每个配置项class中，属性——》属性类型的映射关系。
+        // 一个配置项比如ServiceConfig，很可能有很多实例，后面再解析到同样的XML节点，就不用每次都去通过反射获取了
         Map<String, Class> beanPropTypeMap = beanPropsCache.get(beanClass.getName());
         if (beanPropTypeMap == null) {
             beanPropTypeMap = new HashMap<>();
@@ -155,6 +150,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             Class type = entry.getValue();
             String property = StringUtils.camelToSplitName(beanProperty, "-");
             processedProps.add(property);
+
+            //"parameters"、"methods"、"arguments"节点走特殊的处理分支
             if ("parameters".equals(property)) {
                 parameters = parseParameters(element.getChildNodes(), beanDefinition, parserContext);
             } else if ("methods".equals(property)) {
@@ -162,6 +159,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             } else if ("arguments".equals(property)) {
                 parseArguments(beanName, element.getChildNodes(), beanDefinition, parserContext);
             } else {
+                //其余情况，通用的属性解析
                 String value = resolveAttribute(element, property, parserContext);
                 if (value != null) {
                     value = value.trim();
@@ -171,25 +169,27 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                             registryConfig.setAddress(RegistryConfig.NO_AVAILABLE);
                             beanDefinition.getPropertyValues().addPropertyValue(beanProperty, registryConfig);
                         } else if ("provider".equals(property) || "registry".equals(property) || ("protocol".equals(property) && AbstractServiceConfig.class.isAssignableFrom(beanClass))) {
-                            /**
-                             * For 'provider' 'protocol' 'registry', keep literal value (should be id/name) and set the value to 'registryIds' 'providerIds' protocolIds'
-                             * The following process should make sure each id refers to the corresponding instance, here's how to find the instance for different use cases:
-                             * 1. Spring, check existing bean by id, see{@link ServiceBean#afterPropertiesSet()}; then try to use id to find configs defined in remote Config Center
-                             * 2. API, directly use id to find configs defined in remote Config Center; if all config instances are defined locally, please use {@link ServiceConfig#setRegistries(List)}
-                             */
+
+                            //'provider' 'protocol' 'registry'的ID被以字符串的形式，转换为名为'registryIds' 'providerIds' protocolIds'的属性
+                            // 用以从配置中心寻找配置详情
                             beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
                         } else {
                             Object reference;
                             if (isPrimitive(type)) {
+                                //如果是原始类型，直接获取值，无特殊处理
                                 value = getCompatibleDefaultValue(property, value);
                                 reference = value;
                             } else if (ONRETURN.equals(property) || ONTHROW.equals(property) || ONINVOKE.equals(property)) {
+                                //dubbo在调用之前，之后，出现异常时，会触发oninvoke,onreturn,onthrow三个事件，可配置当事件发生时，通知那个类的那个方法
+                                // 如：<dubbo:method name="methodInvoke" onreturn="notify.onreturn" onthrow="notify.onthrow" />
                                 int index = value.lastIndexOf(".");
                                 String ref = value.substring(0, index);
                                 String method = value.substring(index + 1);
                                 reference = new RuntimeBeanReference(ref);
                                 beanDefinition.getPropertyValues().addPropertyValue(property + METHOD, method);
                             } else {
+                                //解析"ref"属性，可能对应的Bean还没有准备好，所以使用的是RuntimeBeanReference，
+                                // 在Spring处理依赖关系时，最终会将该引用替换成实际生成的Bean对象。
                                 if ("ref".equals(property) && parserContext.getRegistry().containsBeanDefinition(value)) {
                                     BeanDefinition refBean = parserContext.getRegistry().getBeanDefinition(value);
                                     if (!refBean.isSingleton()) {
@@ -216,6 +216,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                 if (parameters == null) {
                     parameters = new ManagedMap();
                 }
+                //其余没有被处理的属性，统一用字符串的形式存储
                 String value = node.getNodeValue();
                 parameters.put(name, new TypedStringValue(value, String.class));
             }

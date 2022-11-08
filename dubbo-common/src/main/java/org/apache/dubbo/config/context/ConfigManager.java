@@ -69,6 +69,9 @@ import static java.util.Optional.ofNullable;
 import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
 import static org.apache.dubbo.config.AbstractConfig.getTagName;
 
+/**
+ * Dubbo全部的配置，从Application、Protocol到Provider、Consumer等，都会被收集到该类当中，并提供缓存
+*/
 public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigManager.class);

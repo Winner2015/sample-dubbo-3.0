@@ -34,7 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * ReferenceBean、ReferenceConfig集中管理
+*/
 public class ReferenceBeanManager implements ApplicationContextAware {
     public static final String BEAN_NAME = "dubboReferenceBeanManager";
     private final Log logger = LogFactory.getLog(getClass());
@@ -138,8 +140,7 @@ public class ReferenceBeanManager implements ApplicationContextAware {
     /**
      * NOTE: This method should only call after all dubbo config beans and all property resolvers is loaded.
      *
-     * @param referenceBean
-     * @throws Exception
+     *  最重要的事情，就是完成ReferenceConfig的初始化，DubboConfigBeanInitializer
      */
     private synchronized void  initReferenceBean(ReferenceBean referenceBean) throws Exception {
 
@@ -151,6 +152,7 @@ public class ReferenceBeanManager implements ApplicationContextAware {
 
         // reference key
         String referenceKey = ReferenceBeanSupport.generateReferenceKey(referenceBean, applicationContext);
+
 
         ReferenceConfig referenceConfig = referenceConfigMap.get(referenceKey);
         if (referenceConfig == null) {
