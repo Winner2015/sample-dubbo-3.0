@@ -172,6 +172,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         beanDefinitionRegistry.removeBeanDefinition(BEAN_NAME);
 
         // this is an early event, it will be notified at org.springframework.context.support.AbstractApplicationContext.registerListeners()
+        //DubboBootstrapApplicationListener
         applicationContext.publishEvent(new DubboAnnotationInitedEvent(applicationContext));
     }
 

@@ -36,7 +36,10 @@ import static org.springframework.util.ObjectUtils.nullSafeEquals;
 /**
  * The {@link ApplicationListener} for {@link DubboBootstrap}'s lifecycle when the {@link ContextRefreshedEvent}
  * and {@link ContextClosedEvent} raised
- *
+ * 监听以下事件，执行特定动作：
+ * 1、DubboAnnotationInitedEvent：Dubbo相关配置以及基础设施类，已经加载完毕，进行Dubbo的初始化
+ * 2、ContextRefreshedEvent：Spring容器启动，触发Dubbo启动
+ * 3、ContextClosedEvent：触发Dubbo销毁前的钩子方法
  * @since 2.7.5
  */
 public class DubboBootstrapApplicationListener implements ApplicationListener, ApplicationContextAware, Ordered {
@@ -76,7 +79,7 @@ public class DubboBootstrapApplicationListener implements ApplicationListener, A
                 // init dubbo config beans before spring singleton beans
                 applicationContext.getBean(DubboConfigBeanInitializer.BEAN_NAME, DubboConfigBeanInitializer.class);
 
-                // All infrastructure config beans are loaded, initialize dubbo here
+                //全部Dubbo基础配置已经加载完毕，触发初始化
                 DubboBootstrap.getInstance().initialize();
             } else if (event instanceof ApplicationContextEvent) {
                 this.onApplicationContextEvent((ApplicationContextEvent) event);

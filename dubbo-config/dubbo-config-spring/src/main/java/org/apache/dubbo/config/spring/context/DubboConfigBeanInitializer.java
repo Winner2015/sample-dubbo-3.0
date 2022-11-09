@@ -47,6 +47,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * NOTE: Dubbo config beans MUST be initialized after registering all BeanPostProcessors,
  * that is after the AbstractApplicationContext#registerBeanPostProcessors() method.
+ *
+ * 有两件非常重要的事情：
+ * 1、确保一些Dubbo的配置Bean被初始化，并添加到 configManager中，包括ApplicationConfig，RegistryConfig，ProviderConfig和ConsumerConfig类等
+ * 2、触发ReferenceBean的初始化：referenceBeanManager.prepareReferenceBeans
  */
 public class DubboConfigBeanInitializer implements BeanFactoryAware, InitializingBean {
 
@@ -83,7 +87,7 @@ public class DubboConfigBeanInitializer implements BeanFactoryAware, Initializin
     /**
      * Initializes there Dubbo's Config Beans before @Reference bean autowiring
      *
-     * 在被@Reference注解的bean加载前确保一些Dubbo的配置Bean被初始化，并添加到 configManager
+     * 在被@DubboReference注解的bean加载前，确保一些Dubbo的配置Bean被初始化，并添加到 configManager
      * 中，包括ApplicationConfig，RegistryConfig，ProviderConfig和ConsumerConfig类等。
      */
     private void prepareDubboConfigBeans() {

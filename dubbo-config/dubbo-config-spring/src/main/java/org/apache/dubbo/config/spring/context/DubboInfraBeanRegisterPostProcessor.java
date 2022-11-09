@@ -39,6 +39,10 @@ import java.util.SortedMap;
  * in order to enable the registered BeanFactoryPostProcessor bean to be loaded and executed.
  * @see org.springframework.context.support.PostProcessorRegistrationDelegate#invokeBeanFactoryPostProcessors(
  * org.springframework.beans.factory.config.ConfigurableListableBeanFactory, java.util.List)
+ *
+ * 1、注册ReferenceAnnotationBeanPostProcessor
+ * 2、注册PropertySourcesPlaceholderConfigurer
+ * 3、收集与Dubbo相关的配置项
  */
 public class DubboInfraBeanRegisterPostProcessor implements BeanDefinitionRegistryPostProcessor, ApplicationContextAware {
 

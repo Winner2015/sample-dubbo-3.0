@@ -42,6 +42,8 @@ import static org.springframework.util.ReflectionUtils.invokeMethod;
 /**
  * The {@link BeanPostProcessor} class for the default property value of {@link AbstractConfig Dubbo's Config Beans}
  *
+ * 如果AbstractConfig没有配置，为Dubbo Bean塞入默认值，比如ID
+ *
  * @since 2.7.6
  */
 public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBeanPostProcessorAdapter<AbstractConfig>

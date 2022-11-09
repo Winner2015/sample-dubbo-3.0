@@ -65,7 +65,7 @@ public interface DubboBeanUtils {
         //Dubbo消费者中，被<dubbo:reference ...>配置的接口，会被放入ReferenceBeanManager，以便后续作为容器类使用
         registerInfrastructureBean(registry, ReferenceBeanManager.BEAN_NAME, ReferenceBeanManager.class);
 
-        //注册后置处理器，扫描出@DubboService类，并注入到被依赖的其他Bean当中
+        //注册后置处理器，扫描出@DubboReference类，并注入到被依赖的其他Bean当中
         registerInfrastructureBean(registry, ReferenceAnnotationBeanPostProcessor.BEAN_NAME,
                 ReferenceAnnotationBeanPostProcessor.class);
 
@@ -81,7 +81,7 @@ public interface DubboBeanUtils {
         registerInfrastructureBean(registry, DubboConfigDefaultPropertyValueBeanPostProcessor.BEAN_NAME,
                 DubboConfigDefaultPropertyValueBeanPostProcessor.class);
 
-        // 用于初始化Dubbo的配置类，比如ApplicationConfig、ProviderConfig、ConsumerConfig等
+        // 用于初始化Dubbo的配置类，比如ApplicationConfig、ProviderConfig、ConsumerConfig等，以及触发ReferenceBean的初始化
         registerInfrastructureBean(registry, DubboConfigBeanInitializer.BEAN_NAME, DubboConfigBeanInitializer.class);
 
         // 注册一些其他Dubbo依赖的基础bean
