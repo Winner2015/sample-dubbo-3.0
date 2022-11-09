@@ -124,6 +124,8 @@ import static org.apache.dubbo.remoting.Constants.CLIENT_KEY;
  * Get singleton instance by calling static method {@link #getInstance()}.
  * Designed as singleton because some classes inside Dubbo, such as ExtensionLoader, are designed only for one instance per process.
  *
+ * DubboBootstrap主要是用来启动Dubbo的，为了屏蔽各种依赖框架而单独提取出来的一个启动辅助类
+ *
  * @since 2.7.5
  */
 public class DubboBootstrap {

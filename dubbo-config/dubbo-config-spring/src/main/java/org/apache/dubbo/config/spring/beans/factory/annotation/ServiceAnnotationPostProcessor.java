@@ -90,7 +90,8 @@ import static org.springframework.util.ClassUtils.resolveClassName;
  * A {@link BeanFactoryPostProcessor} used for processing of {@link Service @Service} annotated classes and annotated bean in java config classes.
  * It's also the infrastructure class of XML {@link BeanDefinitionParser} on &lt;dubbbo:annotation /&gt;
  *
- * 扫描被@DubboService注解的类，注册为Spring的BeanDefinition
+ * 扫描被@DubboService注解的类，注册为Spring的BeanDefinition，为服务接口的暴露做准备
+ * 相对的，ReferenceAnnotationBeanPostProcessor则处理Dubbo消费者接口
  *
  * @see AnnotationBeanDefinitionParser
  * @see BeanDefinitionRegistryPostProcessor

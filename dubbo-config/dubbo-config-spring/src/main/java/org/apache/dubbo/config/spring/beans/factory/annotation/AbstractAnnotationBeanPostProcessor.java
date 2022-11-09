@@ -239,7 +239,10 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
     }
 
     private AbstractAnnotationBeanPostProcessor.AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
+        //寻找被注解的字段
         Collection<AbstractAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(beanClass);
+
+        //寻找被注解的方法
         Collection<AbstractAnnotationBeanPostProcessor.AnnotatedMethodElement> methodElements = findAnnotatedMethodMetadata(beanClass);
         return new AnnotatedInjectionMetadata(beanClass, fieldElements, methodElements);
     }

@@ -88,6 +88,7 @@ public class ReferenceBeanSupport {
 
     }
 
+    //为每个ReferenceBean生成一个唯一Key：ReferenceBean:group/interface:version
     public static String generateReferenceKey(Map<String, Object> attributes, ApplicationContext applicationContext) {
 
         String interfaceClass = (String) attributes.get(ReferenceAttributes.INTERFACE);
